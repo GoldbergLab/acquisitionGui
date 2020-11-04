@@ -1086,7 +1086,7 @@ end
 
 %Verify that the experiments do not overlap channels:
 desiredInSampRate = exper.desiredInSampRate;
-inChans = [exper.audioCh, exper.sigCh, exper.songDetectCh];
+inChans = [exper.audioCh, exper.sigCh];
 allChannels = [];
 for nExper = 1:length(dgd.expers)
     if(desiredInSampRate ~= dgd.expers{nExper}.desiredInSampRate)
@@ -1098,10 +1098,10 @@ for nExper = 1:length(dgd.expers)
         aa_checkinAppData(guifig, 'songtrigdata', params);
         return;
     end
-    % Get a list of the non-null (-1) channels
+    % Get a list of the non
     nonNullInChans = inChans;
-    nonNullInChans(nonNullInChans==-1) = [];
-    if(~isempty(intersect(nonNullInChans, dgd.experData(nExper).inChans)))
+    nonNullInChans(nonNullInChans==-1) == [];
+    if(~isempty(intersect(inChans, dgd.experData(nExper).inChans)))
         warndlg({'The channels specified in the experiment are already in use.  Experiment was not opened.'});
         uiwait;
         aa_checkinAppData(guifig, 'acqguidata', dgd);
