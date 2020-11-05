@@ -2,13 +2,16 @@ function exper = createExper(rootdir)
 %Creates a folder for all files related to this experiment.  Also saves a
 %.mat file to this folder containing the experiment description.
 
-if(~exist('rootdir'))
+if(~exist('rootdir', 'var'))
     rootdir = pwd;
 end
 
+disp()
+disp('Create new experiment:')
+disp()
 birdname = input('Enter a bird name (no spaces or strange characters): ','s');
 birddesc = input('Enter a description of the bird: ','s');
-expername = input('Enter a experiment name: ','s');
+expername = input('Enter an experiment name: ','s');
 experdesc = input('Enter a description of the exper: ','s');
 
 mkdir(rootdir, birdname);
