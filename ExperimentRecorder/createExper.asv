@@ -23,12 +23,12 @@ exper.datecreated = datestr(now,30);
 
 exper.desiredInSampRate = input('Enter the desired input sampling rate: ');
 exper.audioCh = input('What hw channel will audio be on (-1 if no audio): ');
-exper.songDetectCh = input('What digital output hw channel should song detect signal go out on (-1 if no song detect output): ');
-exper.sigCh = input('Enter vector of other hw channels to be recorded ([] if none): ');
+exper.songDetectCh = input('What digital output hw channel should song detect signal go out on: (-1 if no song detect output)');
+exper.sigCh = input('Enter vector of other hw channels to be recorded: ([] if none)');
 
 for(nName = 1:length(exper.sigCh))
-    exper.sigName{nName} = input(['Enter name of signal on channel ', num2str(exper.sigCh(nName)), ': '],'s');
-    exper.sigDesc{nName} = input(['Enter description of signal on channel ', num2str(exper.sigCh(nName)), ': '],'s');
+    exper.sigName{nName} = input(['Enter name of signal on channel ', num2str(exper.sigCh(nName)), ':'],'s');
+    exper.sigDesc{nName} = input(['Enter description of signal on channel ', num2str(exper.sigCh(nName)), ':'],'s');
 end
 
 save([rootdir,'\',birdname,'\',expername,'\exper.mat'], 'exper');
