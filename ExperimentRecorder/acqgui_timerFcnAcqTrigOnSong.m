@@ -25,7 +25,7 @@ end
 %grab new data with 100ms overlap
 daq_log('Starting Peek.');
 %nextPeek that the lowest next peek, they will generally all be equal.
-nextPeek = min([params(logical(dgd.bTrigOnSong)).nextPeek]); 
+nextPeek = min([params(logical(dgd.bTrigOnSong)).nextPeek]);
 if(abs(nextPeek - daq_getCurrSampNum) > dgd.actInSampRate*10)
     beep;
     daq_log('Falling behind.  Skipping data for song detect.');
@@ -61,24 +61,24 @@ for(nExper = find(dgd.bTrigOnSong))
     thresCross = double(songRatio>sd.ratioThreshold); % mod by tp
 
     songDet = conv((thresCross),sd.windowAvg);
-   
+
     maxSongScore = max(songDet);
     if(nExper == dgd.ce)
         set(handles.textSongScore, 'String', ['Song Score: ', num2str(maxSongScore)]);
     end
     daq_log('Song score computed');
-    bNewFile(nExper) = false; 
+    bNewFile(nExper) = false;
     if(~recinfo(nExper).bSongTrigRecording & ~recinfo(nExper).bForcedRecording)%(~daq_isRecording(dgd.expers{dgd.ce}.audioCh))
         %Since not currently recording this bird, check for song start.
         if( (maxSongScore > sd.durationThreshold) )
-            %If sufficient power to signify song, then begin recording            
-            daq_log('Attempt start song triggered recording.');            
+            %If sufficient power to signify song, then begin recording
+            daq_log('Attempt start song triggered recording.');
             firstCrossTime = t(find(songRatio>sd.ratioThreshold, 1, 'first'));
             firstCrossSamp = floor(firstCrossTime * dgd.actInSampRate) + 1;
             params(nExper).songStartSampNum = sampNum + firstCrossSamp;
             [filenamePrefix, recfilenum] = getNewDatafilePrefix(dgd.expers{nExper});
             recinfo(nExper).recfilenum = recfilenum;
-            [bStatus, params(nExper).startSamp, params(nExper).filenames] = daq_recordStart(params(nExper).songStartSampNum - round(srp.preSecs*fs), [dgd.expers{nExper}.dir, filenamePrefix], dgd.experData(nExper).inChans);
+            [bStatus, params(nExper).startSamp, params(nExper).filenames] = daq_recordStart_triggerOut(params(nExper).songStartSampNum - round(srp.preSecs*fs), [dgd.expers{nExper}.dir, filenamePrefix], dgd.experData(nExper).inChans);
             if(~bStatus)
                 beep;
                 warning('Start recording failed'); %#ok<WNTAG>
@@ -101,7 +101,7 @@ for(nExper = find(dgd.bTrigOnSong))
         if( sampNum + length(audio) - 1 - params(nExper).stopSamp > round(srp.postSecs*fs) )
             daq_log('Attempt to stop song triggered recordings.');
             songEndSampNum = sampNum + length(audio) - 1;
-            [bStatus, endSamp] = daq_recordStop(songEndSampNum, dgd.experData(nExper).inChans);
+            [bStatus, endSamp] = daq_recordStop_triggerOut(songEndSampNum, dgd.experData(nExper).inChans);
             if(~bStatus)
                 beep;
                 warning('Song stop recording failed.'); %#ok<WNTAG>
@@ -112,10 +112,10 @@ for(nExper = find(dgd.bTrigOnSong))
                     %Send Text Message - Teja
 %                      sendmail('6077930733@vtext.com', 'Gmail Test', 'Song Recorded');
 %                      display('sent text');
-                end                           
+                end
                 bNewFile(nExper) = true; %#ok<AGROW>
                 daq_log('Requested finish song recordings.');
-            end    
+            end
         end
     end
 end
@@ -126,7 +126,7 @@ for nExper = find(bNewFile)
     daq_log('Wait for new file to be written.');
     daq_waitForRecording(dgd.experData(nExper).inChans);
     if(dgd.sutterStatus)
-        [microsteps, micronsApprox, Status] = sutterGetCurrentPosition(dgd.sutterConnection);        
+        [microsteps, micronsApprox, Status] = sutterGetCurrentPosition(dgd.sutterConnection);
         if(Status)
             daq_appendProperty(params(nExper).filenames{1}, 'SutterMicronsX',  sprintf('%4.2f', micronsApprox(1)));
             daq_appendProperty(params(nExper).filenames{1}, 'SutterMicronsY',  sprintf('%4.2f', micronsApprox(2)));
@@ -134,7 +134,7 @@ for nExper = find(bNewFile)
         end
     end
     daq_log('File completed.');
-    recinfo(nExper).bSongTrigRecording = false; 
+    recinfo(nExper).bSongTrigRecording = false;
     recinfo(nExper).filenum = recinfo(nExper).recfilenum;
     recinfo(nExper).recFileTimes = [recinfo(nExper).recFileTimes, now];
     %%check for possible text messages to be sent:
@@ -156,7 +156,7 @@ for nExper = find(bNewFile)
                 tsd.txtMessageParams.bSentNextSong = true;
             end
         end
-    end  
+    end
 end
 
 setappdata(guifig, 'threadSafeData', tsd);

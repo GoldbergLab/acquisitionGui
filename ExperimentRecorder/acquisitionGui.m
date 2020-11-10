@@ -76,7 +76,7 @@ acqguidata.bTrigOnSong = []; %array specifying which experiments are triggering 
 acqguidata.daqSetup = {}; %one for each open exper
 acqguidata.actInSampRate = 0;
 acqguidata.ce = 0;
-acqguidata.expers = {}; 
+acqguidata.expers = {};
 acqguidata.experData = []; %one struct for each exper
     %ndxOfAudioChan;  %all the channels of all the experiments have to be merged.  This is the ndx of this experiments audio in this merged list of channels.
     %inChans
@@ -103,8 +103,8 @@ acqguidata.experData = []; %one struct for each exper
         %windowAvg
         %durationThreshold
 
-aa_checkinAppData(guifig, 'acqguidata', acqguidata);    
-    
+aa_checkinAppData(guifig, 'acqguidata', acqguidata);
+
 aa_checkoutAppData(guifig, 'acqdisplaydata');
 acqdisplaydata.currFilenum = 0;
 acqdisplaydata.currChanAudio = 0;
@@ -122,7 +122,7 @@ acqdisplaydata.lengthFile = 0;
 aa_checkinAppData(guifig, 'acqdisplaydata', acqdisplaydata);
 
 aa_checkoutAppData(guifig, 'acqrecordinfo');
-recinfo = []; %one struct for each exper.   
+recinfo = []; %one struct for each exper.
     %filenum
     %recfilenum
     %bForcedRecording
@@ -219,26 +219,26 @@ set(acqguidata.sutterUpdateTimer,'BusyMode', 'drop');
 %set up expers and log
 acqguidata.expers = {}; %will be updated below.
 acqguidata.logfile = P.logfile;
-aa_checkinAppData(guifig, 'acqguidata',acqguidata);  
+aa_checkinAppData(guifig, 'acqguidata',acqguidata);
 
 if(~isempty(P.expers))
-    for nExper = 1:length(P.expers) 
+    for nExper = 1:length(P.expers)
         addExperiment(guifig, P.expers(nExper));
-        acqguidata = aa_checkoutAppData(guifig, 'acqguidata');        
+        acqguidata = aa_checkoutAppData(guifig, 'acqguidata');
         acqguidata.experData(nExper).durationThreshold = P.songDetection(nExper).songDensity;
         acqguidata.experData(nExper).ratioThreshold = P.songDetection(nExper).powerThres;
         acqguidata.experData(nExper).songDuration = P.songDetection(nExper).songLength;
-        aa_checkinAppData(guifig, 'acqguidata',acqguidata);  
+        aa_checkinAppData(guifig, 'acqguidata',acqguidata);
         set(handles.editSongDensity, 'String', num2str(P.songDetection(nExper).songDensity));
-        set(handles.editPowerThres, 'String', num2str(P.songDetection(nExper).powerThres));        
-        set(handles.editSongLength, 'String', num2str(P.songDetection(nExper).songLength));        
-    end    
-  
+        set(handles.editPowerThres, 'String', num2str(P.songDetection(nExper).powerThres));
+        set(handles.editSongLength, 'String', num2str(P.songDetection(nExper).songLength));
+    end
+
     for nExper = 1:length(P.expers)
         if(P.bTrigOnSong(nExper))
-           startTriggeringOnSong(guifig, nExper); 
+           startTriggeringOnSong(guifig, nExper);
         end
-    end    
+    end
 end
 
 %pass along thread safe data.
@@ -268,12 +268,12 @@ if(~isempty(threadSafeData.txtMessageParams))
     end
 end
 start(acqguidata.sutterUpdateTimer);
-        
+
 % UIWAIT makes acquisitionGui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 % --- Outputs from this function are returned to the command line.
-function varargout = acquisitionGui_OutputFcn(hObject, eventdata, handles) 
+function varargout = acquisitionGui_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -301,8 +301,8 @@ handles = guidata(guifig);
 
 [dgd] = aa_getAppDataReadOnly(guifig, 'acqguidata');
 [recinfo, bRecStatus] = aa_checkoutAppData(guifig, 'acqrecordinfo');
-if(~bRecStatus) 
-    return; 
+if(~bRecStatus)
+    return;
 end
 
 if(~recinfo(dgd.ce).bSongTrigRecording)
@@ -331,9 +331,9 @@ if(~recinfo(dgd.ce).bSongTrigRecording)
             recinfo(dgd.ce).filenum = recinfo(dgd.ce).recfilenum;
             recinfo(dgd.ce).recFileTimes = [recinfo(dgd.ce).recFileTimes, now];
             set(handles.textRecordingStatus, 'String', ['Finished forced recording.', num2str(recinfo(dgd.ce).recfilenum), '.   Ready to record.']);
-            set(handles.textRecordingStatus, 'BackgroundColor', 'green'); 
+            set(handles.textRecordingStatus, 'BackgroundColor', 'green');
             set(handles.buttonRecord, 'String', 'Start Recording');
-            recinfo(dgd.ce).bForcedRecording = false;       
+            recinfo(dgd.ce).bForcedRecording = false;
         end
     end
 end
@@ -351,7 +351,7 @@ if(bNewFile)
             daq_appendProperty([path,filename], 'SutterMicronsZ',  sprintf('%4.2f', micronsApprox(3)));
         end
     end
-    if((get(handles.checkboxAutoDisplay,'Value') ~= 0)) 
+    if((get(handles.checkboxAutoDisplay,'Value') ~= 0))
         acqgui_updateDisplayFile(guifig, recinfo(dgd.ce).filenum);
     end
 end
@@ -377,8 +377,8 @@ if(~dgd.bTrigOnSong(nExper))
     [params, bParamStatus] = aa_checkoutAppData(guifig, 'songtrigdata');
     if(~bParamStatus)
         aa_checkinAppData(guifig, 'acqguidata', dgd);
-        return; 
-    end    
+        return;
+    end
     dgd.bTrigOnSong(nExper) = true;
     params(nExper).nextPeek = ceil(daq_getCurrSampNum - dgd.actInSampRate);
     aa_checkinAppData(guifig, 'songtrigdata', params);
@@ -396,18 +396,18 @@ if(~dgd.bTrigOnSong(nExper))
     else
         aa_checkinAppData(guifig, 'acqguidata', dgd);
     end
-    
+
     if(nExper == dgd.ce)
         set(handles.buttonTrigOnSong, 'String', 'Stop Triggering On Song');
     end
 
-else  
+else
     [recinfo] = aa_getAppDataReadOnly(guifig, 'acqrecordinfo');
     if(recinfo(nExper).bSongTrigRecording)
         if(daq_isUpdating)
-            aa_checkinAppData(guifig, 'acqguidata', dgd);            
+            aa_checkinAppData(guifig, 'acqguidata', dgd);
             return;
-        else  
+        else
             daq_waitForRecording(dgd.experData(nExper).inChans);
         end
     end
@@ -439,7 +439,7 @@ function editSongDensity_Callback(hObject, eventdata, handles)
 %directly.  If not currently triggering then no worries.
 guifig = get(hObject,'Parent');
 [dgd, bDGDStatus] = aa_checkoutAppData(guifig, 'acqguidata');
-if(bDGDStatus) 
+if(bDGDStatus)
     try
         dgd.experData(dgd.ce).songDetection.durationThreshold = str2num(get(handles.editSongDensity, 'String'));
         aa_checkinAppData(guifig, 'acqguidata', dgd);
@@ -475,7 +475,7 @@ function editPowerThres_Callback(hObject, eventdata, handles)
 %directly.  If not currently triggering then no worries.
 guifig = get(hObject,'Parent');
 [dgd, bDGDStatus] = aa_checkoutAppData(guifig, 'acqguidata');
-if(bDGDStatus) 
+if(bDGDStatus)
     try
         dgd.experData(dgd.ce).songDetection.ratioThreshold = str2num(get(handles.editPowerThres, 'String'));
         aa_checkinAppData(guifig, 'acqguidata', dgd);
@@ -509,7 +509,7 @@ function editSongLength_Callback(hObject, eventdata, handles)
 %        editSongLength as a double
 guifig = get(hObject,'Parent');
 [dgd, bDGDStatus] = aa_checkoutAppData(guifig, 'acqguidata');
-if(bDGDStatus) 
+if(bDGDStatus)
     try
         dgd.experData(dgd.ce).songDetection.songDuration = str2num(get(handles.editSongLength, 'String'));
         aa_checkinAppData(guifig, 'acqguidata', dgd);
@@ -589,7 +589,7 @@ sig = ud.data;
 range = max(max(audio), abs(min(audio)));
 audio = audio/(range*3);
 range = max(max(sig), abs(min(sig)));
-sig = sig/(range*3);  
+sig = sig/(range*3);
 
 player = audioplayer(audio+sig, fs);
 axes(handles.axesAudio);
@@ -600,19 +600,19 @@ l1 = line([xl(1),xl(1)],ylimits1,'Color','yellow');
 axes(handles.axesSignal);
 hold on;
 ylimits2 = ylim;
-l2 = line([xl(1),xl(1)],ylimits2,'Color','red');    
+l2 = line([xl(1),xl(1)],ylimits2,'Color','red');
 play(player);
 while(isplaying(player))
     currTime = xl(1) + get(player,'CurrentSample')/fs;
     set([l1,l2],'XData',[currTime, currTime]);
-    drawnow;        
+    drawnow;
 end
 delete(l1);
 delete(l2);
 axes(handles.axesAudio);
 hold off;
 axes(handles.axesSignal);
-hold off;    
+hold off;
 
 
 % --- Executes on selection change in popupChannel.
@@ -1064,25 +1064,25 @@ function addExperiment(guifig, exper)
 handles = guidata(guifig);
 tsd = getappdata(guifig, 'threadSafeData');
 [dgd,status] = aa_checkoutAppData(guifig, 'acqguidata');
-if(~status) 
+if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    return; 
+    return;
 end
 [ddd, status] = aa_checkoutAppData(guifig, 'acqdisplaydata');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata', dgd); return; 
+    aa_checkinAppData(guifig, 'acqguidata', dgd); return;
 end
 [recinfo, status] = aa_checkoutAppData(guifig, 'acqrecordinfo');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); return; 
+    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); return;
 end
 [params, status] = aa_checkoutAppData(guifig, 'songtrigdata');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); aa_checkinAppData(guifig, 'acqrecordinfo', recinfo); return; 
-end    
+    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); aa_checkinAppData(guifig, 'acqrecordinfo', recinfo); return;
+end
 
 %Verify that the experiments do not overlap channels:
 desiredInSampRate = exper.desiredInSampRate;
@@ -1107,7 +1107,7 @@ for nExper = 1:length(dgd.expers)
         aa_checkinAppData(guifig, 'acqguidata', dgd);
         aa_checkinAppData(guifig, 'acqdisplaydata', ddd);
         aa_checkinAppData(guifig, 'acqrecordinfo', recinfo);
-        aa_checkinAppData(guifig, 'songtrigdata', params);        
+        aa_checkinAppData(guifig, 'songtrigdata', params);
         return;
     end
     allChannels = [allChannels, dgd.experData(nExper).inChans]; %#ok<AGROW>
@@ -1154,21 +1154,21 @@ durationThreshold = .5; %fraction of duration that must exceed ratio threshold (
 songDetection.windowSize = fix(desiredInSampRate/20);
 songDetection.windowOverlap = fix(songDetection.windowSize*.5);
 %Parameters for Part 2.  Frequency range in which songs typically has power, and power threshold.
-songDetection.minFreq = minFreq; 
+songDetection.minFreq = minFreq;
 songDetection.maxFreq = maxFreq;
 songDetection.minNdx = floor((songDetection.windowSize/desiredInSampRate)*songDetection.minFreq + 1);
 songDetection.maxNdx = ceil((songDetection.windowSize/desiredInSampRate)*songDetection.maxFreq + 1);
 songDetection.ratioThreshold = ratioThreshold;
 %Parameters for part 3
 songDetection.songDuration = songDuration;
-songDetection.windowLength = round((desiredInSampRate * songDetection.songDuration) / (songDetection.windowSize-songDetection.windowOverlap)); 
+songDetection.windowLength = round((desiredInSampRate * songDetection.songDuration) / (songDetection.windowSize-songDetection.windowOverlap));
 songDetection.windowAvg = repmat(1/songDetection.windowLength,1,songDetection.windowLength);
 songDetection.durationThreshold = durationThreshold;
 dgd.experData(experNdx).songDetection = songDetection;
 
 %Thread safe data
 tsd.songTrigParams(experNdx).preSecs = 5;
-tsd.songTrigParams(experNdx).postSecs = 2; 
+tsd.songTrigParams(experNdx).postSecs = 2;
 tsd.songTrigParams(experNdx).maxFileLength = 30;
 tsd.displayParams(experNdx).audioCLim = [];
 
@@ -1184,7 +1184,7 @@ else
 end
 
 %START THE DAQ
-%reset 
+%reset
 daqreset;
 if(isempty(timerfind('Name','trigOnSong')))
     delete(timerfind('Name','trigOnSong'));
@@ -1243,25 +1243,25 @@ function closeExperiment(guifig, experNdx)
 %check out everything we need.
 handles = guidata(guifig);
 [dgd,status] = aa_checkoutAppData(guifig, 'acqguidata');
-if(~status) 
+if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    return; 
+    return;
 end
 [ddd, status] = aa_checkoutAppData(guifig, 'acqdisplaydata');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata', dgd); return; 
+    aa_checkinAppData(guifig, 'acqguidata', dgd); return;
 end
 [recinfo, status] = aa_checkoutAppData(guifig, 'acqrecordinfo');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); return; 
+    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); return;
 end
 [params, status] = aa_checkoutAppData(guifig, 'songtrigdata');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); aa_checkinAppData(guifig, 'acqrecordinfo', recinfo); return; 
-end  
+    aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); aa_checkinAppData(guifig, 'acqrecordinfo', recinfo); return;
+end
 
 %determine remaining channels
 desiredInSampRate = dgd.expers{experNdx}.desiredInSampRate;
@@ -1290,22 +1290,22 @@ if(length(dgd.expers) == 0)
     dgd.ce = 0;
     cla(handles.axesAudio);
     cla(handles.axesSignal);
-    
+
     set(handles.buttonTrigOnSong,'Enable','off');
     set(handles.buttonRecord,'Enable','off');
     set(handles.buttonTrigOnChan,'Enable','off');
-    
+
     aa_checkinAppData(guifig, 'acqguidata', dgd);
     aa_checkinAppData(guifig, 'acqdisplaydata', ddd);
     aa_checkinAppData(guifig, 'acqrecordinfo', recinfo);
-    aa_checkinAppData(guifig, 'songtrigdata', params);    
+    aa_checkinAppData(guifig, 'songtrigdata', params);
 else
     experStrings = get(handles.popupExperiments, 'String');
     experStrings = experStrings([1:experNdx-1,experNdx+1:length(experStrings)]);
     set(handles.popupExperiments, 'String', experStrings);
     set(handles.popupExperiments, 'Value', 1);
     dgd.ce = 1;
-    %reset 
+    %reset
     daqreset;
     if(isempty(timerfind('Name','trigOnSong')))
         delete(timerfind('Name','trigOnSong'));
@@ -1336,7 +1336,7 @@ else
     aa_checkinAppData(guifig, 'acqdisplaydata', ddd);
     aa_checkinAppData(guifig, 'acqrecordinfo', recinfo);
     aa_checkinAppData(guifig, 'songtrigdata', params);
-    
+
     %call updateExper
     updateCurrentExperiment(guifig, 1, true)
 end
@@ -1373,16 +1373,16 @@ function updateCurrentExperiment(guifig, experNdx, bDeleted)
 %check out everything we need.
 handles = guidata(guifig);
 [dgd,status] = aa_checkoutAppData(guifig, 'acqguidata');
-if(~status) 
+if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    return; 
+    return;
 end
 [ddd, status] = aa_checkoutAppData(guifig, 'acqdisplaydata');
 if(~status)
     disp('Failed to checkout data necessary to add experiment');
-    aa_checkinAppData(guifig, 'acqguidata'); return; 
+    aa_checkinAppData(guifig, 'acqguidata'); return;
 end
-recinfo = aa_getAppDataReadOnly(guifig, 'acqrecordinfo'); 
+recinfo = aa_getAppDataReadOnly(guifig, 'acqrecordinfo');
 
 if(~exist('bDeleted'))
     bDeleted = false;
@@ -1407,7 +1407,7 @@ end
 
 %update the experiment
 dgd.ce = experNdx;
-set(handles.popupExperiments, 'Value', dgd.ce); 
+set(handles.popupExperiments, 'Value', dgd.ce);
 
 %load new display data
 
@@ -1446,7 +1446,7 @@ for(nChan = 0:length(dgd.expers{dgd.ce}.sigCh))
     end
     if(chan == ddd.currChan2)
         channdx2 = nChan+1;
-    end   
+    end
     if(chan == ddd.currChan3)
         channdx3 = nChan+1;
     end
@@ -1506,11 +1506,11 @@ if(recinfo(dgd.ce).bForcedRecording)
 elseif(recinfo(dgd.ce).bSongTrigRecording)
     set(handles.textRecordingStatus, 'String', ['Started song recording.', num2str(recinfo(dgd.ce).recfilenum)]);
     set(handles.textRecordingStatus, 'BackgroundColor', 'red');
-    set(handles.buttonRecord, 'String', 'Stop Recording');    
+    set(handles.buttonRecord, 'String', 'Stop Recording');
 else
     set(handles.textRecordingStatus, 'String', ['Finished recording.', num2str(recinfo(dgd.ce).filenum), '.   Ready to record.']);
-    set(handles.textRecordingStatus, 'BackgroundColor', 'green');     
-    set(handles.buttonRecord, 'String', 'Start Recording')  
+    set(handles.textRecordingStatus, 'BackgroundColor', 'green');
+    set(handles.buttonRecord, 'String', 'Start Recording')
 end
 
 % update specgram
@@ -1612,7 +1612,7 @@ if(dispfilenum > 0)
     [bDetect, tElapsed, score, songRatio, songDetect] = songDetector5(audio, exper.desiredInSampRate, dgd.experData(dgd.ce).songDetection.songDuration, dgd.experData(dgd.ce).songDetection.durationThreshold, dgd.experData(dgd.ce).songDetection.ratioThreshold, minFreq, maxFreq, false);
     axes(handles.axes3);
     cla;
-    plot(songRatio,'r'); 
+    plot(songRatio,'r');
     axis tight;
     ylim([0,10]);
     hold on;
@@ -1659,9 +1659,9 @@ stopTime = floor(now) + stopHour/24;
 if(stopTime < now)
     stopTime = stopTime + 1;
 end
-startat(t_restart, stopTime);   
+startat(t_restart, stopTime);
 
-function clearMorningRestartTimer()  
+function clearMorningRestartTimer()
 %delete restart timer if there is one.
 if(~isempty(timerfind('Name','acqguiRestartInMorning')))
     stop(timerfind('Name','acqguiRestartInMorning'));
@@ -1758,7 +1758,7 @@ if(length(answer) ~= 0) %#ok<ISMT>
         beep;
     end
     setappdata(guifig,'threadSafeData', tsd);
-    acqgui_updateDisplay(guifig);  
+    acqgui_updateDisplay(guifig);
 end
 
 % --------------------------------------------------------------------
@@ -1827,7 +1827,7 @@ function buttonAddDatafileComment_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 guifig = findobj('Name','acquisitionGui');
-handles = guidata(guifig); 
+handles = guidata(guifig);
 commentStr = get(handles.editDatafileComment, 'String');
 if(~all(isspace(commentStr)))
     dgd = aa_getAppDataReadOnly(guifig, 'acqguidata');
@@ -1879,7 +1879,7 @@ fs = ud.Fs; % mod by VG
 
 range = max(max(audio), abs(min(audio)));
 audio = audio/(range*3);
- 
+
 player = audioplayer(audio, fs);
 axes(handles.axesAudio);
 hold on;
@@ -1891,13 +1891,13 @@ play(player);
 while(isplaying(player))
     currTime = xl(1) + get(player,'CurrentSample')/fs;
     set([l1],'XData',[currTime, currTime]);
-    drawnow;        
+    drawnow;
 end
 delete(l1);
 
 axes(handles.axesAudio);
 hold off;
- 
+
 
 % --------------------------------------------------------------------
 function MenuSignalAxis_Callback(hObject, eventdata, handles)
@@ -1918,7 +1918,7 @@ sig = ud.data;
 fs = ud.fs;
 
 range = max(max(sig), abs(min(sig)));
-sig = sig/(range*3);  
+sig = sig/(range*3);
 
 player = audioplayer(sig, fs);
 
@@ -1926,18 +1926,18 @@ axes(handles.axesSignal);
 hold on;
 xl = xlim;
 ylimits2 = ylim;
-l2 = line([xl(1),xl(1)],ylimits2,'Color','red');    
+l2 = line([xl(1),xl(1)],ylimits2,'Color','red');
 
 play(player);
 while(isplaying(player))
     currTime = xl(1) + get(player,'CurrentSample')/fs;
     set([l2],'XData',[currTime, currTime]);
-    drawnow;        
+    drawnow;
 end
 
 delete(l2);
 axes(handles.axesSignal);
-hold off;    
+hold off;
 
 % --------------------------------------------------------------------
 function setAudioColorRange_Callback(hObject, eventdata, handles)
@@ -1969,7 +1969,7 @@ if(length(answer) ~= 0) %#ok<ISMT>
         tsd.displayParams(dgd.ce).audioCLim = [];
     end
     setappdata(guifig,'threadSafeData', tsd);
-    acqgui_updateDisplay(guifig);  
+    acqgui_updateDisplay(guifig);
 end
 
 % --- Executes on button press in buttonDisplayFilesPerHour.
