@@ -6,13 +6,13 @@ function [bStatus, endSamp] = daq_recordStop(endSamp, channels)
 
 global BTRIGGER;
 global TRIGGEREND;
-global GINCHANS;
+global GAICHANS;
 
 %convert hardware channel numbers into matlab channel indices.
-%[junk, matchannels] = intersect(GINCHANS, channels); %intersect function does not preserve order
+%[junk, matchannels] = intersect(GAICHANS, channels); %intersect function does not preserve order
 matchannels = [];
 for(i = 1:length(channels))
-    matchannels(i) = find(GINCHANS == channels(i));
+    matchannels(i) = find(GAICHANS == channels(i));
 end
 
 for(i = 1:length(matchannels))

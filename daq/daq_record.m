@@ -45,17 +45,17 @@ function [bStatus, startSamp, endSamp, filenames] = daq_record(startSamp, endSam
 %to the existing file.  This can result in unreadable files or
 %discontinuous files, unless used carefully.
 
-global GINCHANS
+global GAICHANS
 global BTRIGGER;
 global TRIGGERFILENAME;
 global TRIGGERSTART;
 global TRIGGEREND;
 
 %convert hardware channel numbers into matlab channel indices.
-%[junk, matchannels] = intersect(GINCHANS, channels); %intersect function does not preserve order
+%[junk, matchannels] = intersect(GAICHANS, channels); %intersect function does not preserve order
 matchannels = [];
 for(i = 1:length(channels))
-    matchannels(i) = find(GINCHANS == channels(i));
+    matchannels(i) = find(GAICHANS == channels(i));
 end
 
 bStatus = zeros(length(matchannels), 1);

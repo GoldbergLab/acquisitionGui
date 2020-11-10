@@ -8,14 +8,14 @@ function daq_bufferUpdate(obj, event, bufferUnitSamps, bufferLength, breal, real
 
 %%% NEVER access these global variables explicitly!
 
-global GINCHANS
+global GAICHANS
 
 %Buffering variables
 global NUMBUFFERUNITS;
 global GDAQDATA;
 global GDAQTIME;
 
-%Triggering variables 
+%Triggering variables
 global BTRIGGER;
 global TRIGGERFILENAME;
 global TRIGGERSTART;
@@ -24,7 +24,7 @@ global TRIGGERFID;
 
 %Peek variables
 global NPEEK
-global PEEKDATASTORE; 
+global PEEKDATASTORE;
 global PEEKTIMESTORE;
 
 FILEFORMATID = -4;
@@ -34,6 +34,7 @@ daq_log(['numBufferUnits: ', num2str(NUMBUFFERUNITS)]);
 %get data and add to buffer
 hwinfo = daqhwinfo(obj);
 nativeDataType = hwinfo.NativeDataType;
+% Read data from the device
 [data,time,abstime] = getdata(obj, bufferUnitSamps, 'native');
 buffLocation = mod(NUMBUFFERUNITS, bufferLength);
 startNdx = buffLocation*bufferUnitSamps + 1;
@@ -46,7 +47,7 @@ NUMBUFFERUNITS = NUMBUFFERUNITS + 1;
 for(nChan = 1:length(BTRIGGER))
     if(BTRIGGER(nChan)) %there is a trigger
         if((TRIGGERSTART(nChan)==-1) | (NUMBUFFERUNITS * bufferUnitSamps >= TRIGGERSTART(nChan))) %it has started
-            
+
             trigStartNdx = startNdx;
             %If this is first bufferUpdate since trigger started, then open the
             %file and prepare to write to it.
@@ -59,11 +60,11 @@ for(nChan = 1:length(BTRIGGER))
                     warning('File already exists, data being appended to end of file.')
                 end
                 trigStartNdx = endNdx - (NUMBUFFERUNITS * bufferUnitSamps - TRIGGERSTART(nChan));
-                
+
                 TRIGGERFID(nChan) = fopen(TRIGGERFILENAME{nChan}, 'ab'); %'a': append, 'b': binary.
                 %First thing in the file is the trigger file format id.
                 fwrite(TRIGGERFID(nChan), FILEFORMATID, 'float64');
-                %Next write the time of daq start as a datevec 
+                %Next write the time of daq start as a datevec
                 fwrite(TRIGGERFID(nChan), abstime, 'float64');
                 %Next write the current time as a datevec
                 fwrite(TRIGGERFID(nChan), datevec(now), 'float64');
@@ -71,7 +72,7 @@ for(nChan = 1:length(BTRIGGER))
                 %current version there is always one channel per file.
                 fwrite(TRIGGERFID(nChan), 1, 'float64');
                 %Next write the channel hardware numbers.
-                fwrite(TRIGGERFID(nChan), GINCHANS(nChan), 'float64');
+                fwrite(TRIGGERFID(nChan), GAICHANS(nChan), 'float64');
                 %Next write the native scale and offset for each hardware
                 %channel. %With current version there is always one channel per file.
                 fwrite(TRIGGERFID(nChan), get(obj.Channel(nChan),'NativeScaling'), 'float64');
@@ -79,18 +80,18 @@ for(nChan = 1:length(BTRIGGER))
                 %Next write the native data type followed by file format id.
                 fwrite(TRIGGERFID(nChan), double(nativeDataType), 'float64');
                 fwrite(TRIGGERFID(nChan), FILEFORMATID, 'float64');
-                
+
                 %Next write the number of the first sample.
                 fwrite(TRIGGERFID(nChan), TRIGGERSTART(nChan), 'float64');
                 %Next write time of the first sample in the file (in seconds) since daq start
                 ndx = mod(trigStartNdx-1,length(GDAQTIME)) + 1;
                 fwrite(TRIGGERFID(nChan), GDAQTIME(ndx), 'float64');
-                
+
                 TRIGGERSTART(nChan) = -1; %Signal that trigger has begun.
             end
-	            
+
             trigEndNdx = endNdx;
-            if((TRIGGEREND(nChan)~=-2) & (NUMBUFFERUNITS * bufferUnitSamps >= TRIGGEREND(nChan)))    
+            if((TRIGGEREND(nChan)~=-2) & (NUMBUFFERUNITS * bufferUnitSamps >= TRIGGEREND(nChan)))
                 %The end of the trigger is within the buffer, therefore complete the
                 %file, and close it.
                 triggerEndCopy = TRIGGEREND(nChan);
@@ -110,7 +111,7 @@ for(nChan = 1:length(BTRIGGER))
                 fwrite(TRIGGERFID(nChan), GDAQTIME(ndx), 'float64');
                 %Close the file.
                 fclose(TRIGGERFID(nChan));
-                BTRIGGER(nChan) = false;    
+                BTRIGGER(nChan) = false;
             elseif(trigStartNdx == startNdx)
                 %Save the entire latest update to the datafile.
                 fwrite(TRIGGERFID(nChan), [data(:,nChan)]', nativeDataType);
@@ -120,7 +121,7 @@ for(nChan = 1:length(BTRIGGER))
                 %first update during the trigger.
                 ndx = mod([trigStartNdx-1:trigEndNdx-1],length(GDAQTIME)) + 1;
                 fwrite(TRIGGERFID(nChan), [GDAQDATA(ndx,nChan)]', nativeDataType);
-            end  
+            end
         end
 	end
 end
@@ -134,7 +135,7 @@ if(NPEEK)
         PEEKTIMESTORE = [];
     elseif ((NUMBUFFERUNITS * bufferUnitSamps - NPEEK) > (bufferUnitSamps * bufferLength))
         NPEEK = 0;
-        warning('Peek start is no longer in the buffer.'); 
+        warning('Peek start is no longer in the buffer.');
         PEEKDATASTORE = [];
         PEEKTIMESTORE = [];
     else

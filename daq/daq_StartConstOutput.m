@@ -6,9 +6,9 @@ function [aiStartTime, aoStartTime] = daq_StartConstOutput(outputSig)
 %   It should have as many columns a output channels.
 
 global GAO
-global GOUTCHANS;
+global GAOCHANS;
 
-if(size(outputSig,2) ~= length(GOUTCHANS))
+if(size(outputSig,2) ~= length(GAOCHANS))
     error('outputSig needs to have as many columns as there are output channels. (at least as currently coded)');
 end
 
