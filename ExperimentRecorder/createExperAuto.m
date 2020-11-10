@@ -1,4 +1,4 @@
-function exper = createExperAuto(rootdir, birdname, expername, desiredInSampRate, audioCh, sigCh, songDetectCh)
+function exper = createExperAuto(rootdir, birdname, expername, deviceID, desiredInSampRate, audioCh, sigCh, songDetectCh)
 %Creates a folder for all files related to this experiment.  Also saves a
 %.mat file to this folder containing the experiment description.
 
@@ -11,6 +11,7 @@ exper.birddesc = '';
 exper.expername = expername;
 exper.experdesc = '';
 exper.datecreated = datestr(now,30);
+exper.deviceID = deviceID;
 exper.desiredInSampRate = desiredInSampRate;
 exper.audioCh = audioCh;
 exper.sigCh = sigCh;

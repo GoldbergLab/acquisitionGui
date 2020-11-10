@@ -24,6 +24,7 @@ exper.expername = expername;
 exper.experdesc = experdesc;
 exper.datecreated = datestr(now,30);
 
+exper.deviceID = input('Enter the NI DAQ device ID (eg. ''Dev1''): ');
 exper.desiredInSampRate = input('Enter the desired input sampling rate: ');
 exper.audioCh = input('What hw channel will audio be on (-1 if no audio): ');
 exper.songDetectCh = input('What digital output hw channel should song detect signal go out on (-1 if no song detect output): ');
