@@ -1192,7 +1192,7 @@ end
 %parameters
 buffer=15; %Seconds %parameterize
 updateFreq = 4; %Hz %parameterize
-[ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(allChannels, desiredInSampRate, [], 1, buffer, updateFreq, dgd.logfile);
+[ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(exper.deviceID, allChannels, desiredInSampRate, [], exper.songDetectCh, 1, buffer, updateFreq, dgd.logfile);
 daqSetup.actInSampleRate = actInSampleRate;
 daqSetup.actOutSampleRate = actOutSampleRate;
 daqSetup.buffer = buffer;
@@ -1263,6 +1263,9 @@ if(~status)
     aa_checkinAppData(guifig, 'acqguidata', dgd); aa_checkinAppData(guifig, 'acqdisplaydata', ddd); aa_checkinAppData(guifig, 'acqrecordinfo', recinfo); return;
 end
 
+deviceID = dgd.expers{experNdx}.deviceID;
+songDetectCh = dgd.expers{experNdx}.songDetectCh;
+
 %determine remaining channels
 desiredInSampRate = dgd.expers{experNdx}.desiredInSampRate;
 allChannels = [];
@@ -1313,7 +1316,7 @@ else
     %parameters
     buffer= 90; %Seconds %parameterize
     updateFreq = 4; %Hz %parameterize
-    [ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(allChannels, desiredInSampRate, [], 1, buffer, updateFreq, dgd.logfile);
+    [ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(deviceID, allChannels, desiredInSampRate, [], songDetectCh, 1, buffer, updateFreq, dgd.logfile);
     daqSetup.actInSampleRate = actInSampleRate;
     daqSetup.actOutSampleRate = actOutSampleRate;
     daqSetup.buffer = buffer;

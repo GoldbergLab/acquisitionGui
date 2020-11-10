@@ -86,7 +86,7 @@ function startExperHelper(obj, event, bTrigOnSong, cexpers, logfile, dispchanAud
 for(nExper = 1:length(cexpers))
     rootndx = strfind(cexpers{nExper}.dir,cexpers{nExper}.birdname);
     rootdir = cexpers{nExper}.dir(1:rootndx-2);
-    expers(nExper) = createExperAuto(rootdir, cexpers{nExper}.birdname, datestr(now,29), cexpers{nExper}.desiredInSampRate, cexpers{nExper}.audioCh, cexpers{nExper}.sigCh, cexpers(nExper).songDetectCh);
+    expers(nExper) = createExperAuto(rootdir, cexpers{nExper}.birdname, datestr(now,29), cexpers{nExper}.deviceID, cexpers{nExper}.desiredInSampRate, cexpers{nExper}.audioCh, cexpers{nExper}.sigCh, cexpers(nExper).songDetectCh);
 end
 acquisitionGui('bTrigOnSong', bTrigOnSong, ...
                'logfile', logfile, ...
