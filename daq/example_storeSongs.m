@@ -1,4 +1,4 @@
-function birdFileList = example_storeSongs(experName, numBirds, desiredInputSampleRate, birdSongStartDesc, birdSongEndDesc)
+function birdFileList = example_storeSongs(experName, deviceID, numBirds, desiredInputSampleRate, birdSongStartDesc, birdSongEndDesc)
 %Monitors audio on several channels and saves periods of time that contain
 %songs to disk.  2 secs of audio are saved prior to the song start.  Once
 %the song beings audio will continue to be saved used no song occurs for a
@@ -20,8 +20,8 @@ for(i = 1:numBirds)
 end
 
 %Initialize the daq toolbox
-%Assume bird 1 audio on hardware channel 1, bird 2 audio on channel hardware 2... 
-[ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init([1:numBirds], desiredInputSampleRate, [], 1, 90, 4);
+%Assume bird 1 audio on hardware channel 1, bird 2 audio on channel hardware 2...
+[ai, ao, ~, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(deviceID, [1:numBirds], desiredInputSampleRate, [], 1, [], 90, 4);
 
 %Start data acquisition
 daq_Start;
@@ -47,14 +47,14 @@ maxNdx = ceil((windowSize/actInSampleRate)*maxFreq + 1);
 [data, time, sampNum] = daq_peekLast(ceil(actInSampleRate)); %grab last second of data
 while(true)
     tic
-    
+
     for(nBird = 1:numBirds)
         audio = data(:,nBird);
-        
+
         %Take specgram and measure power in each time-slice
         [b,f,t] = specgram(audio, windowSize, actInSampleRate);
         power = mean(abs(b(minNdx:maxNdx,:)), 1);
-               
+
         if(~daq_isRecording(nBird))
             %Since not currently recording this bird, check for song start.
             if( max(power) > pwThres )
@@ -67,7 +67,7 @@ while(true)
                 if(~bStatus)
                     warning('Start recording failed on channel ',num2str(nBird));
                 else
-                    disp(['Started recording channel ',num2str(nBird)]); 
+                    disp(['Started recording channel ',num2str(nBird)]);
                     birdFileList{nBird}{count(nBird)} = filename;
                     count(nBird) = count(nBird) + 1;
                 end
@@ -81,17 +81,17 @@ while(true)
                 if(~bStatus)
                     warning('Song stop recording failed on channel ', num2str(nBird));
                 else
-                    disp(['Stopped recording channel ', num2str(nBird)]); 
+                    disp(['Stopped recording channel ', num2str(nBird)]);
                 end
             end
         end
     end
-    
+
     %Wait for new samples to be collected
     while(toc < .9)
         pause(.05);
-    end        
+    end
 
     %grab new data with 100ms overlap
-    [data, time, sampNum] = daq_peek(round(sampNum+length(time)-actInSampleRate/10)); 
+    [data, time, sampNum] = daq_peek(round(sampNum+length(time)-actInSampleRate/10));
 end
