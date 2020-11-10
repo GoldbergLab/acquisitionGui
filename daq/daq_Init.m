@@ -1,4 +1,4 @@
-function [ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(inChannels, inSampleRate, outChannels, outSampleRate, bufferSecs, updateFreq, logFile, realtimeFcnHandle)
+function [ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(deviceID, aiChannels, inSampleRate, aoChannels, outSampleRate, dioChannels, bufferSecs, updateFreq, logFile, realtimeFcnHandle)
 %This function initializes the continuous data acquisition buffers and
 %configures the daq hardware appropriately.  After this function has
 %completed, daq_Start must be called to begin acquisition.
@@ -14,8 +14,8 @@ function [ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(i
 %inSampleRate:  the number of samples per second you would like to collect
 %on all input channels.  The DAQ hardware can not achieve arbitrary sampling rates.
 %The closest available sampling rate will be returned in the variable actInSampleRate.
-%The higher the rate the more demanding the computing needs.  High rates 
-%can result in instability.  
+%The higher the rate the more demanding the computing needs.  High rates
+%can result in instability.
 
 %outChannels:  array of hardware output channel indicies that will needed
 %for your application.
@@ -23,8 +23,8 @@ function [ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(i
 %ouSampleRate:  the number of samples per second you would like to collect
 %on all output channels.  The DAQ hardware can not achieve arbitrary sampling rates.
 %The closest available sampling rate will be returned in the variable actOutSampleRate.
-%The higher the rate the more demanding the computing needs.  High rates 
-%can result in instability. 
+%The higher the rate the more demanding the computing needs.  High rates
+%can result in instability.
 
 %bufferSecs:  the length of the input data buffer in Secs.  ex.  The value 60 would
 %result in a one minute long buffer.
@@ -40,10 +40,10 @@ function [ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(i
 %value greater then the specifed value is choses and returned as
 %actUpdateFreq.
 
-%realtimeFcnHandle (optional):  a function pointer, which if specified, is called 
-%after each buffer update.  The signature of the function must 
+%realtimeFcnHandle (optional):  a function pointer, which if specified, is called
+%after each buffer update.  The signature of the function must
 %be [] = function(buffer, bufferTimeStamps, mostRecentSampNdx, samplesPerUpdate)
-%This function specified for quasi-realtime analysis 
+%This function specified for quasi-realtime analysis
 %or realtime data visualization.   Use of this function should be reserved for
 %tasks that require temporal precision, because its use will result in heavy
 %computing loads.  If the realtimeFcn is too computationally demanding, the
@@ -60,8 +60,10 @@ function [ai, ao, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(i
 %informational globals
 global GAI;
 global GAO;
-global GINCHANS;
-global GOUTCHANS;
+global GDIO; % Global holder for digital input object
+global GAICHANS;
+global GAOCHANS;
+global GDIOCHANS;
 global COUNT;
 global NUMBUFFERUNITS;
 
@@ -106,12 +108,12 @@ else
 end
 
 %Open a session: the available contructors (Device Ids) are revealed by daqhwinfo('nidaq')
-if(length(inChannels) > 0)
-    GINCHANS = inChannels;
+if(length(aiChannels) > 0)
+    GAICHANS = aiChannels;
     try
-        ai = analoginput('nidaq', 1);
+        ai = analoginput('nidaq', deviceID);
     catch
-        ai = analoginput('nidaq', 'Dev2');
+        ai = analoginput('nidaq', 1);
     end
     GAI = ai;
     %Trigger Type (setting Manual prevents BLUE*SCREEN*!!!!)
@@ -121,21 +123,34 @@ if(length(inChannels) > 0)
     set(ai, 'InputType', 'SingleEnded'); %Differential, SingleEnded, Referenced and NonReferenced are also options.
     %Transfer Data Setup
     ai.BufferingMode = 'Auto';
-    set(ai,'TransferMode','SingleDMA'); %'SingleDMA' , 'Interrupts'  
+    set(ai,'TransferMode','SingleDMA'); %'SingleDMA' , 'Interrupts'
 else
-    GINCHANS = [];
+    GAICHANS = [];
     ai = [];
     actInSampleRate = 0;
     actUpdateFreq = 0;
 end
 
-
-if(length(outChannels) > 0)
-    GOUTCHANS = outChannels;
+if length(diChannels) > 0)
+    GDIOCHANS = diChannels;
     try
-        ao = analogoutput('nidaq', 1);
+        dio = digitalio('nidaq', deviceID);
     catch
-        ao = analogoutput('nidaq', 'Dev1');
+        dio = digitalio('nidaq', 1);
+    end
+    GDIO = dio;
+else
+    GDIOCHANS = [];
+    dio = [];
+end
+
+
+if(length(aoChannels) > 0)
+    GAOCHANS = aoChannels;
+    try
+        ao = analogoutput('nidaq', deviceID);
+    catch
+        ao = analogoutput('nidaq', 1);
     end
     GAO = ao;
     set(ao,'TriggerType','Manual');
@@ -144,36 +159,40 @@ if(length(outChannels) > 0)
     ao.BufferingMode = 'Auto';
     set(ao,'TransferMode','SingleDMA');
 else
-    GOUTCHANS = [];
+    GAOCHANS = [];
     ao = [];
     actOutSampleRate = 0;
 end
 
 
 %Create channels:
-if(length(inChannels) > 0)
-    ichan = addchannel(ai,inChannels)
-    for(ndx = 1:length(inChannels) )
+if(length(aiChannels) > 0)
+    ichan = addchannel(ai,aiChannels)
+    for(ndx = 1:length(aiChannels) )
         set(ichan(ndx), 'SensorRange' ,[-10,10]);%Potential range of the input.
         set(ichan(ndx), 'InputRange' ,[-10,10]);%Expected range across which we digitize. Discrete Set of possible values ([-10,10], [-5,5], [-.5,.5], [-.05,.05])
         set(ichan(ndx), 'UnitsRange'  ,[-10,10]); %Scaling of input into desired units.
     end
 end
-if(length(outChannels) > 0)
-    ochan(ndx) = addchannel(ao,outChannels);
-    for(ndx = 1:length(outChannels) )
+if(length(aoChannels) > 0)
+    ochan(ndx) = addchannel(ao,aoChannels);
+    for(ndx = 1:length(aoChannels) )
         ochan(ndx).DefaultChannelValue = 0; %The voltage value at which the output channel sits by default.
-    end        
+    end
+end
+if(length(dioChannels) > 0)
+    % Add desired digital lines:
+    addline(dio, dioChannels, repmat({'out'}, size(dioChannels)));
 end
 
 %Set up sampling rate and buffering:
-if(length(inChannels) > 0)
+if(length(aiChannels) > 0)
     %SampleRate
     set(ai,'SamplesPerTrigger',inf)   %Value / SampleRate equals seconds of recording
     set(ai,'SampleRate',inSampleRate) % up to 200000
     actInSampleRate = get(ai,'SampleRate');
-    
-%No longer used:  Code to generate bufferUnitSize that is even divisor of actInSampRate    
+
+%No longer used:  Code to generate bufferUnitSize that is even divisor of actInSampRate
 %     %Find actualUpdateFreq based on actual sample rate (choosen to be as
 %     %small as possible without going under desired rate.
 %     possUnitSize = divisors(actInSampleRate) %divisor sof the actual Sample Rate are possible sizes for buffer updates
@@ -192,15 +211,15 @@ if(length(inChannels) > 0)
     bufferUnitSize = floor(actInSampleRate / updateFreq);
     actUpdateFreq = actInSampleRate / bufferUnitSize;
     BUFFERUNITSIZE = bufferUnitSize;
-    
+
     %Set up buffer
     bufferLength = ceil(actUpdateFreq * bufferSecs);    %Length of buffer in terms of number update units
     NUMBUFFERUNITS = 0; %Running total number of buffer units recorded.
-    GDAQDATA = zeros(bufferUnitSize*bufferLength,length(inChannels));
-    GDAQTIME = zeros(bufferUnitSize*bufferLength,1); 
-    BTRIGGER = zeros(length(inChannels), 1);
+    GDAQDATA = zeros(bufferUnitSize*bufferLength,length(aiChannels));
+    GDAQTIME = zeros(bufferUnitSize*bufferLength,1);
+    BTRIGGER = zeros(length(aiChannels), 1);
     NPEEK = 0;
-    
+
     %Set buffer update fcn
     set(ai,'SamplesAcquiredFcn',{'daq_bufferUpdate', bufferUnitSize, bufferLength, breal, realtimeFcnHandle})
     set(ai,'SamplesAcquiredFcnCount',bufferUnitSize)
@@ -208,11 +227,10 @@ if(length(inChannels) > 0)
 end
 
 %Trivial output configuration
-if(length(outChannels) > 0)
+if(length(aoChannels) > 0)
     set(ao,'SampleRate',outSampleRate)
     actOutSampleRate = get(ao,'SampleRate');
     set(ao,'StopFcn',@daqcallback);
 end
 
 daq_log(['Done Initing: BufferUnitSize: ', num2str(BUFFERUNITSIZE)]);
-
