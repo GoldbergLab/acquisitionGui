@@ -110,7 +110,7 @@ while(true)
         end
         if( sampNum + length(audio) - 1 - stopSamp > postSamps )
             songEndSampNum = sampNum + length(audio) - 1;
-            [bStatus, endSamp] = daq_recordStop(songEndSampNum, inChans);
+            [bStatus, endSamp] = daq_recordStop_triggerOut(songEndSampNum, inChans);
             if(~bStatus)
                 warning('Song stop recording failed.');
             else
@@ -203,7 +203,7 @@ while(true)
                         end
                     end
                     recSampNum = daq_getCurrSampNum;
-                    [bStatus, endSamp] = daq_recordStop(recSampNum, inChans);
+                    [bStatus, endSamp] = daq_recordStop_triggerOut(recSampNum, inChans);
                     if(~bStatus)
                         warning('Song stop recording failed.');
                     else
