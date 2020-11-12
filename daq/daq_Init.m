@@ -131,7 +131,7 @@ else
     actUpdateFreq = 0;
 end
 
-if length(diChannels) > 0)
+if length(diChannels > 0)
     GDIOCHANS = diChannels;
     try
         dio = digitalio('nidaq', deviceID);

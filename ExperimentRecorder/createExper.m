@@ -6,9 +6,9 @@ if(~exist('rootdir', 'var'))
     rootdir = pwd;
 end
 
-disp()
+fprintf('\n')
 disp('Create new experiment:')
-disp()
+fprintf('\n')
 birdname = input('Enter a bird name (no spaces or strange characters): ','s');
 birddesc = input('Enter a description of the bird: ','s');
 expername = input('Enter an experiment name: ','s');
@@ -24,7 +24,7 @@ exper.expername = expername;
 exper.experdesc = experdesc;
 exper.datecreated = datestr(now,30);
 
-exper.deviceID = input('Enter the NI DAQ device ID (eg. ''Dev1''): ');
+exper.deviceID = input('Enter the NI DAQ device ID (eg. ''Dev1''): ', 's');
 exper.desiredInSampRate = input('Enter the desired input sampling rate: ');
 exper.audioCh = input('What hw channel will audio be on (-1 if no audio): ');
 exper.songDetectCh = input('What digital output hw channel should song detect signal go out on (-1 if no song detect output): ');
