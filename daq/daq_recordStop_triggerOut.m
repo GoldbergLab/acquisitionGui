@@ -5,4 +5,5 @@ function [bStatus, endSamp] = daq_recordStop(endSamp, channels, dio)
 if bStatus
     % Turn off trigger out signal
     putvalue(dio, 0);
+    disp('SONG DETECT OFF!');
 end

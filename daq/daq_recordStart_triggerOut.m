@@ -5,4 +5,5 @@ function [bStatus, startSamp, filenames] = daq_recordStart_triggerOut(startSamp,
 if bStatus
     % Turn on trigger out signal
     putvalue(dio, 1);
+    disp('SONG DETECT ON!');
 end
