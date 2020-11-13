@@ -1086,8 +1086,10 @@ end
 
 %Verify that the experiments do not overlap channels:
 desiredInSampRate = exper.desiredInSampRate;
-inChans = [exper.audioCh, exper.sigCh, exper.songDetectCh];
-allChannels = [];
+inChans = [exper.audioCh, exper.sigCh];
+outChans = [exper.songDetectCh];
+allInChannels = [];
+allOutChannels = [];
 for nExper = 1:length(dgd.expers)
     if(desiredInSampRate ~= dgd.expers{nExper}.desiredInSampRate)
         warndlg({'The experiment does not have the same sampling rate as those already open.  Experiment was not opened'});
@@ -1110,10 +1112,24 @@ for nExper = 1:length(dgd.expers)
         aa_checkinAppData(guifig, 'songtrigdata', params);
         return;
     end
-    allChannels = [allChannels, dgd.experData(nExper).inChans]; %#ok<AGROW>
+    allInChannels = [allInChannels, dgd.experData(nExper).inChans]; %#ok<AGROW>
+    nonNullOutChans = outChans;
+    nonNullOutChans(nonNullOutChans==-1) = [];
+    if(~isempty(intersect(nonNullOutChans, dgd.experData(nExper).outChans)))
+        warndlg({'The output channels specified in the experiment are already in use.  Experiment was not opened.'});
+        uiwait;
+        aa_checkinAppData(guifig, 'acqguidata', dgd);
+        aa_checkinAppData(guifig, 'acqdisplaydata', ddd);
+        aa_checkinAppData(guifig, 'acqrecordinfo', recinfo);
+        aa_checkinAppData(guifig, 'songtrigdata', params);
+        return;
+    end
+    allOutChannels = [allOutChannels, dgd.experData(nExper).outChans]; %#ok<AGROW>
 end
-ndxOfAudioChan = length(allChannels) + 1;
-allChannels = [allChannels, inChans];
+ndxOfAudioChan = length(allInChannels) + 1;
+allInChannels = [allInChannels, inChans];
+ndxOfSongDetectChan = length(allOutChannels) + 1;
+allOutChannels = [allOutChannels, outChans];
 
 %Add exper to data structures...
 experNdx = length(dgd.expers) + 1;
@@ -1121,6 +1137,9 @@ dgd.expers{experNdx} = exper;
 dgd.bTrigOnSong(experNdx) = false;
 dgd.experData(experNdx).ndxOfAudioChan = ndxOfAudioChan;
 dgd.experData(experNdx).inChans = inChans;
+dgd.experData(experNdx).ndxOfSongDetectChan = ndxOfSongDetectChan;
+dgd.experData(experNdx).outChans = outChans;
+
 dgd.experData(experNdx).autoUpdate = true;
 %Display Data
 dgd.experData(experNdx).dddbackground.dispfilenum = getLatestDatafileNumber(dgd.expers{experNdx});
@@ -1192,7 +1211,7 @@ end
 %parameters
 buffer=15; %Seconds %parameterize
 updateFreq = 4; %Hz %parameterize
-[ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(exper.deviceID, allChannels, desiredInSampRate, [], exper.songDetectCh, 1, buffer, updateFreq, dgd.logfile);
+[ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(exper.deviceID, allInChannels, desiredInSampRate, [], 1, exper.songDetectCh, buffer, updateFreq, dgd.logfile);
 daqSetup.actInSampleRate = actInSampleRate;
 daqSetup.actOutSampleRate = actOutSampleRate;
 daqSetup.buffer = buffer;
@@ -1268,11 +1287,14 @@ songDetectCh = dgd.expers{experNdx}.songDetectCh;
 
 %determine remaining channels
 desiredInSampRate = dgd.expers{experNdx}.desiredInSampRate;
-allChannels = [];
+allInChannels = [];
+allOutChannels = [];
 for nExper = 1:length(dgd.expers)
     if(nExper ~= experNdx)
-        dgd.experData(nExper).ndxOfAudioChan = length(allChannels) + 1;
-        allChannels = [allChannels, dgd.experData(nExper).inChans]; %#ok<AGROW>
+        dgd.experData(nExper).ndxOfAudioChan = length(allInChannels) + 1;
+        allInChannels =  [allInChannels,  dgd.experData(nExper).inChans]; %#ok<AGROW>
+        dgd.experData(nExper).ndxOfSongDetectChan = length(allOutChannels) + 1;
+        allOutChannels = [allOutChannels, dgd.experData(nExper).outChans];
     end
 end
 
@@ -1316,7 +1338,7 @@ else
     %parameters
     buffer= 90; %Seconds %parameterize
     updateFreq = 4; %Hz %parameterize
-    [ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(deviceID, allChannels, desiredInSampRate, [], songDetectCh, 1, buffer, updateFreq, dgd.logfile);
+    [ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(deviceID, allInChannels, desiredInSampRate, [], allOutChannels, 1, buffer, updateFreq, dgd.logfile);
     daqSetup.actInSampleRate = actInSampleRate;
     daqSetup.actOutSampleRate = actOutSampleRate;
     daqSetup.buffer = buffer;
