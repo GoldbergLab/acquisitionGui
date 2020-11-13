@@ -82,7 +82,7 @@ global DAQLOGFID;
 %COUNTER
 COUNT = 0;
 
-if((nargin < 7) || isequal(logFile,''))
+if((nargin < 9) || isequal(logFile,''))
     DAQLOGFILE = '';
     DAQLOGFID = -1;
 else
@@ -100,7 +100,7 @@ else
     end
 end
 
-if(nargin < 8)
+if(nargin < 10)
     realtimeFcnHandle = [];
     breal = false;
 else
@@ -131,8 +131,8 @@ else
     actUpdateFreq = 0;
 end
 
-if length(diChannels > 0)
-    GDIOCHANS = diChannels;
+if length(dioChannels > 0)
+    GDIOCHANS = dioChannels;
     try
         dio = digitalio('nidaq', deviceID);
     catch
