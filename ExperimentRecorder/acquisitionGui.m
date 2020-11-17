@@ -86,7 +86,6 @@ acqguidata.songDetectOverlap = 2;   % Fraction of song detect data that is
                                     %   overlap. 1.0 means a full songDetectPeriod
                                     %   is reanalyzed every time. 2.0 means two
                                     %   full songDetectPeriods are reanalyzed each time.
-acqguidata.songDetectGracePeriod= 7; % Amount of time in seconds to wait when not-song is detected before turning off songDetect/recording
     %ndxOfAudioChan;  %all the channels of all the experiments have to be merged.  This is the ndx of this experiments audio in this merged list of channels.
     %inChans
     %autoUpdate
@@ -1801,7 +1800,7 @@ prompt = {'Time to record before trigger condition starts (s):', ...
           'Refractory period - time to ignore subsequent triggers after maximum length is reached (s):'};
 dlg_title = 'Input Recording Parameters:';
 num_lines = 1;
-defaults = {num2str(stp.preSecs),num2str(stp.postSecs),num2str(stp.maxFileLength)};
+defaults = {num2str(stp.preSecs),num2str(stp.postSecs),num2str(stp.maxFileLength),num2str(stp.songDetectRefractoryPeriod)};
 answer = inputdlg(prompt,dlg_title,num_lines,defaults);
 
 if(length(answer) ~= 0) %#ok<ISMT>
