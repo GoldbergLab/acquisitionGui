@@ -79,7 +79,7 @@ for(nExper = find(dgd.bTrigOnSong))
     % Update refractory period if necessary.
     if (params(nExper).songDetectRefractoryPeriodActive)
         % We have been in a refractory period. Should we still be?
-        if (sampNum - params(nExper).stopSamp > sd.songDetectRefractoryPeriod*dgd.actInSampRate)
+        if (sampNum - params(nExper).stopSamp > srp.songDetectRefractoryPeriod*dgd.actInSampRate)
             % Refractory period completed.
             params(nExper).songDetectRefractoryPeriodActive = false;
             disp('Refractory period ended!')

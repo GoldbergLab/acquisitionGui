@@ -1201,12 +1201,12 @@ songDetection.songDuration = songDuration;
 songDetection.windowLength = round((desiredInSampRate * songDetection.songDuration) / (songDetection.windowSize-songDetection.windowOverlap));
 songDetection.windowAvg = repmat(1/songDetection.windowLength,1,songDetection.windowLength);
 songDetection.durationThreshold = durationThreshold;
-songDetection.songDetectRefractoryPeriod = 10; % Time (in seconds) that we will hold off on starting a recording if a previous recording maxed out the record time (to avoid photobleaching fiberphotometry birds)
 dgd.experData(experNdx).songDetection = songDetection;
 %Thread safe data
 tsd.songTrigParams(experNdx).preSecs = 5;
 tsd.songTrigParams(experNdx).postSecs = 2;
 tsd.songTrigParams(experNdx).maxFileLength = 10; %30;
+tsd.songTrigParams(experNdx).songDetectRefractoryPeriod = 10; % Time (in seconds) that we will hold off on starting a recording if a previous recording maxed out the record time (to avoid photobleaching fiberphotometry birds)
 tsd.displayParams(experNdx).audioCLim = [];
 
 %UPDATE THE EXPER POPUP
@@ -1795,22 +1795,28 @@ elseif (dgd.ce == 0)
     return;
 end
 stp = tsd.songTrigParams(dgd.ce);
-prompt = {'Pre Trigger Secs:','Post Trigger Secs:','Max File Length:'};
+prompt = {'Time to record before trigger condition starts (s):', ...
+          'Time to record after trigger condition ends (s):', ...
+          'Maximum time to record at once (s):', ...
+          'Refractory period - time to ignore subsequent triggers after maximum length is reached (s):'};
 dlg_title = 'Input Recording Parameters:';
 num_lines = 1;
-def = {num2str(stp.preSecs),num2str(stp.postSecs),num2str(stp.maxFileLength)};
-answer = inputdlg(prompt,dlg_title,num_lines,def);
+defaults = {num2str(stp.preSecs),num2str(stp.postSecs),num2str(stp.maxFileLength)};
+answer = inputdlg(prompt,dlg_title,num_lines,defaults);
 
 if(length(answer) ~= 0) %#ok<ISMT>
     [stp.preSecs, bStatus1] = str2num(answer{1}); %#ok<ST2NM>
     [stp.postSecs, bStatus2] = str2num(answer{2}); %#ok<ST2NM>
     [stp.maxFileLength , bStatus3] = str2num(answer{3}); %#ok<ST2NM>
-    if(bStatus1 & bStatus2 & bStatus3)
+    [stp.songDetectRefractoryPeriod, bStatus4] = str2num(answer{3}); %#ok<ST2NM>
+    if(bStatus1 & bStatus2 & bStatus3 & bStatus4)
         tsd.songTrigParams(dgd.ce).preSecs = stp.preSecs;
         tsd.songTrigParams(dgd.ce).postSecs = stp.postSecs;
         tsd.songTrigParams(dgd.ce).maxFileLength = stp.maxFileLength;
+        tsd.songTrigParams(dgd.ce).songDetectRefractoryPeriod = stp.songDetectRefractoryPeriod;
     else
         beep;
+        warndlg('Warning, invalid parameter entered - no changes made.')
     end
     setappdata(guifig,'threadSafeData', tsd);
     acqgui_updateDisplay(guifig);
