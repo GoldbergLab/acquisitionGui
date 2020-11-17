@@ -10,7 +10,7 @@ end
 
 debug = true;
 if debug
-    r = num2str(randi([0, 10000], 1, 1));
+    r = num2str(randi([0, 100000], 1, 1));
     birdname = ['test_bird_', r];
     birddesc = ['test bird description ', r];
     expername = ['test_exper ', r];
