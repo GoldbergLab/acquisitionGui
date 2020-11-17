@@ -78,6 +78,15 @@ acqguidata.actInSampRate = 0;
 acqguidata.ce = 0;
 acqguidata.expers = {};
 acqguidata.experData = []; %one struct for each exper
+acqguidata.songDetectPeriod = 0.25;  % Period in seconds between runs of the song detect function
+acqguidata.songDetectOverlap = 2;   % Fraction of song detect data that is
+                                    %   re-analyzed to avoid missing a song that
+                                    %   breaks across the song detect window. 0
+                                    %   means there is no overlap, 0.5 means 50%
+                                    %   overlap. 1.0 means a full songDetectPeriod
+                                    %   is reanalyzed every time. 2.0 means two
+                                    %   full songDetectPeriods are reanalyzed each time.
+acqguidata.songDetectGracePeriod= 7; % Amount of time in seconds to wait when not-song is detected before turning off songDetect/recording
     %ndxOfAudioChan;  %all the channels of all the experiments have to be merged.  This is the ndx of this experiments audio in this merged list of channels.
     %inChans
     %autoUpdate
@@ -269,6 +278,15 @@ if(~isempty(threadSafeData.txtMessageParams))
 end
 start(acqguidata.sutterUpdateTimer);
 
+%%DEBUG ONLY!
+% t = timer('Name', 'debugAutoStartTimer', 'ExecutionMode', 'singleShot', ...
+%         'StartDelay', 2, ...
+%         'TimerFcn', 'debugAutoStart(timerfind(''Name'', ''debugAutoStartTimer''), [], findobj(''Name'', ''acquisitionGui''))');
+% start(t);
+children = get(guifig, 'Children');
+buttonCreateExper_Callback(children(1), [], [])
+buttonTrigOnSong_Callback(children(1), [], [])
+
 % UIWAIT makes acquisitionGui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -388,7 +406,7 @@ if(~dgd.bTrigOnSong(nExper))
         dgd.trigOnSongTimer = timer;
         set(dgd.trigOnSongTimer,'Name', 'trigOnSong');
         set(dgd.trigOnSongTimer,'TimerFcn','acqgui_timerFcnAcqTrigOnSong(timerfind(''Name'', ''trigOnSong''), [], findobj(''Name'', ''acquisitionGui''))');
-        set(dgd.trigOnSongTimer,'Period',1);
+        set(dgd.trigOnSongTimer,'Period',dgd.songDetectPeriod);
         set(dgd.trigOnSongTimer,'ExecutionMode','fixedRate');
         set(dgd.trigOnSongTimer,'BusyMode', 'drop');
         aa_checkinAppData(guifig, 'acqguidata', dgd);
@@ -1163,12 +1181,14 @@ recinfo(experNdx).bSongTrigRecording = false;
 recinfo(experNdx).recFileTimes = [];
 %song trig info
 params(experNdx).nextPeek = 0;
+params(experNdx).songDetectRefractoryPeriodActive = false;  % Boolean indicating whether or not a song detect refractory period is active.
 %Song Trigger Default Parameters
 minFreq = 2000; %parameterize
 maxFreq = 6000; %parameterize
 ratioThreshold = 5; %unitless. set based on sig to noise of mic.
 songDuration = .6; %in seconds
 durationThreshold = .5; %fraction of duration that must exceed ratio threshold (0-1).
+
 %Parameters for part 1.  Song Trigger Spectrogram Parameters
 songDetection.windowSize = fix(desiredInSampRate/20);
 songDetection.windowOverlap = fix(songDetection.windowSize*.5);
@@ -1183,12 +1203,12 @@ songDetection.songDuration = songDuration;
 songDetection.windowLength = round((desiredInSampRate * songDetection.songDuration) / (songDetection.windowSize-songDetection.windowOverlap));
 songDetection.windowAvg = repmat(1/songDetection.windowLength,1,songDetection.windowLength);
 songDetection.durationThreshold = durationThreshold;
+songDetection.songDetectRefractoryPeriod = 10; % Time (in seconds) that we will hold off on starting a recording if a previous recording maxed out the record time (to avoid photobleaching fiberphotometry birds)
 dgd.experData(experNdx).songDetection = songDetection;
-
 %Thread safe data
 tsd.songTrigParams(experNdx).preSecs = 5;
 tsd.songTrigParams(experNdx).postSecs = 2;
-tsd.songTrigParams(experNdx).maxFileLength = 30;
+tsd.songTrigParams(experNdx).maxFileLength = 10; %30;
 tsd.displayParams(experNdx).audioCLim = [];
 
 %UPDATE THE EXPER POPUP
@@ -1210,11 +1230,12 @@ if(isempty(timerfind('Name','trigOnSong')))
 end
 %parameters
 buffer=15; %Seconds %parameterize
-updateFreq = 4; %Hz %parameterize
+updateFreq = 8; %4; %Hz %parameterize
 [ai, ao, dio, actInSampleRate, actOutSampleRate, actUpdateFreq] = daq_Init(exper.deviceID, allInChannels, desiredInSampRate, [], 1, exper.songDetectCh, buffer, updateFreq, dgd.logfile);
 daqSetup.actInSampleRate = actInSampleRate;
 daqSetup.actOutSampleRate = actOutSampleRate;
 daqSetup.buffer = buffer;
+disp(sprintf('Actual update frequency = %d', actUpdateFreq))
 daqSetup.actUpdateFreq = actUpdateFreq;
 save([exper.dir,'daqSetup',datestr(now,30),'.mat'], 'daqSetup');
 dgd.actInSampRate = actInSampleRate;
@@ -1463,6 +1484,9 @@ for(nChan = 0:length(dgd.expers{dgd.ce}.sigCh))
     end
     dash = strfind(chanstrings{nChan+1}, '-');
     chan = str2double(chanstrings{nChan+1}(1:dash(1)-1));
+    disp(fprintf('chan=%d', chan));
+    disp(fprintf('ddd.currChan=%d', ddd.currChan));
+
     if(chan == ddd.currChan)
         channdx = nChan+1;
     end
