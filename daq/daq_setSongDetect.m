@@ -3,8 +3,9 @@ function [bStatus] = daq_setSongDetect(songDetect)
 
 global GDIO
 % Set trigger out signal
+
 try
-    putvalue(GDIO, 0);
+    putvalue(GDIO, songDetect);
     bStatus = true;
     disp(sprintf('SONG DETECT SET: %d', songDetect));
 catch
