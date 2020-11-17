@@ -35,7 +35,7 @@ if(abs(nextPeek - daq_getCurrSampNum) > dgd.actInSampRate*10)
 end
 %nextPeekActualSample = round(nextPeek-dgd.actInSampRate/10);
 [data, time, sampNum] = daq_peek(nextPeek);
- disp(sprintf('Peeked: Data size = %s, sampRange = %d-%d, timeRange = %0.2f-%0.2f, timeWindow = %0.2f', num2str(size(data)), sampNum, sampNum+length(time), sampNum/dgd.actInSampRate, (sampNum+length(time))/dgd.actInSampRate, length(time)/dgd.actInSampRate))
+% disp(sprintf('Peeked: Data size = %s, sampRange = %d-%d, timeRange = %0.2f-%0.2f, timeWindow = %0.2f', num2str(size(data)), sampNum, sampNum+length(time), sampNum/dgd.actInSampRate, (sampNum+length(time))/dgd.actInSampRate, length(time)/dgd.actInSampRate))
 for(nExper = find(dgd.bTrigOnSong))
     params(nExper).nextPeek = sampNum+length(time)-round(dgd.actInSampRate*dgd.songDetectPeriod*dgd.songDetectOverlap);
 end
