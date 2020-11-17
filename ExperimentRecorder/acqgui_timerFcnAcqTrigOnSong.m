@@ -193,5 +193,8 @@ if(bNewFile(dgd.ce) & dgd.experData(dgd.ce).autoUpdate)
     daq_log('Completed waiting and display.');
 end
 catch me
+    % Turn off digital trigger in case of error to try to reduce likelihood
+    %   of excessive photobleaching
+    daq_setSongDetect(false);
     disp(me.getReport('extended', 'hyperlinks', 'on'));
 end
