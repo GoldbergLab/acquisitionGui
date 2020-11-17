@@ -279,14 +279,12 @@ end
 start(acqguidata.sutterUpdateTimer);
 
 %%DEBUG ONLY!
-% t = timer('Name', 'debugAutoStartTimer', 'ExecutionMode', 'singleShot', ...
-%         'StartDelay', 2, ...
-%         'TimerFcn', 'debugAutoStart(timerfind(''Name'', ''debugAutoStartTimer''), [], findobj(''Name'', ''acquisitionGui''))');
-% start(t);
-children = get(guifig, 'Children');
-buttonCreateExper_Callback(children(1), [], [])
-buttonTrigOnSong_Callback(children(1), [], [])
-
+debug = false;
+if debug
+    children = get(guifig, 'Children');
+    buttonCreateExper_Callback(children(1), [], [])
+    buttonTrigOnSong_Callback(children(1), [], [])
+end
 % UIWAIT makes acquisitionGui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -1788,6 +1786,14 @@ handles = guidata(guifig);
 tsd = getappdata(guifig,'threadSafeData');
 dgd = aa_getAppDataReadOnly(guifig, 'acqguidata');
 
+
+if (isempty(tsd.songTrigParams))
+    warndlg('Error: please make sure at least one experiment is loaded before setting recording parameters.');
+    return;
+elseif (dgd.ce == 0)
+    warndlg('Error: please select a valid experiment before setting recording parameters.');
+    return;
+end
 stp = tsd.songTrigParams(dgd.ce);
 prompt = {'Pre Trigger Secs:','Post Trigger Secs:','Max File Length:'};
 dlg_title = 'Input Recording Parameters:';
