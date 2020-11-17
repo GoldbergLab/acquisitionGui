@@ -1807,7 +1807,7 @@ if(length(answer) ~= 0) %#ok<ISMT>
     [stp.preSecs, bStatus1] = str2num(answer{1}); %#ok<ST2NM>
     [stp.postSecs, bStatus2] = str2num(answer{2}); %#ok<ST2NM>
     [stp.maxFileLength , bStatus3] = str2num(answer{3}); %#ok<ST2NM>
-    [stp.songDetectRefractoryPeriod, bStatus4] = str2num(answer{3}); %#ok<ST2NM>
+    [stp.songDetectRefractoryPeriod, bStatus4] = str2num(answer{4}); %#ok<ST2NM>
     if(bStatus1 & bStatus2 & bStatus3 & bStatus4)
         tsd.songTrigParams(dgd.ce).preSecs = stp.preSecs;
         tsd.songTrigParams(dgd.ce).postSecs = stp.postSecs;
