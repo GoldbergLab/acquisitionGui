@@ -3,6 +3,7 @@ function acqgui_timerFcnAcqTrigOnSong(obj, evnt, guifig)
 %It is crucial, that this function, which accesses daq_data, does not
 %interrupt the daq_bufferUpdate.  Interruptions result in crashes and
 %freezes.
+try
 if(daq_isUpdating)
     return;
 end
@@ -30,11 +31,13 @@ if(abs(nextPeek - daq_getCurrSampNum) > dgd.actInSampRate*10)
     beep;
     daq_log('Falling behind.  Skipping data for song detect.');
     warning('Falling behind.  Skipping data for song detect.');
-    nextPeek = daq_getCurrSampNum - dgd.actInSampRate;
+    nextPeek = daq_getCurrSampNum - dgd.songDetectPeriod * dgd.actInSampRate;
 end
-[data, time, sampNum] = daq_peek(round(nextPeek-dgd.actInSampRate/10));
+%nextPeekActualSample = round(nextPeek-dgd.actInSampRate/10);
+[data, time, sampNum] = daq_peek(nextPeek);
+ disp(sprintf('Peeked: Data size = %s, sampRange = %d-%d, timeRange = %0.2f-%0.2f, timeWindow = %0.2f', num2str(size(data)), sampNum, sampNum+length(time), sampNum/dgd.actInSampRate, (sampNum+length(time))/dgd.actInSampRate, length(time)/dgd.actInSampRate))
 for(nExper = find(dgd.bTrigOnSong))
-    params(nExper).nextPeek = sampNum+length(time);
+    params(nExper).nextPeek = sampNum+length(time)-round(dgd.actInSampRate*dgd.songDetectPeriod*dgd.songDetectOverlap);
 end
 daq_log('Peek Completed.');
 
@@ -55,11 +58,16 @@ for(nExper = find(dgd.bTrigOnSong))
     srp = tsd.songTrigParams(nExper);
     %Take specgram and measure power in each time-slice
     [b,f,t] = specgram(audio, sd.windowSize, dgd.actInSampRate, sd.windowSize, sd.windowOverlap);
+%    disp(fprintf('size(stft)=%s, sd.minNdx=%s, sd.maxNdx=%s', num2str(size(b)), num2str(sd.minNdx), num2str(sd.maxNdx)))
+    % Split the spectrogram by frequency band - song vs non-song frequency band
+    %   Then find the mean power in each band for each windowed chunk.
     powerSong = mean(abs(b(sd.minNdx:sd.maxNdx,:)), 1);
     powerNonSong = mean(abs(b([1:sd.minNdx-1,sd.maxNdx+1:end],:)), 1) + eps;
+    % Find the ratio between song and non-song power for each  windowed chunk
     songRatio = powerSong./powerNonSong;
+    % Determine if the song power ratio is above the detection threshold for each  windowed chunk
     thresCross = double(songRatio>sd.ratioThreshold); % mod by tp
-
+    % Convolve with window that is one windowed chunk long
     songDet = conv((thresCross),sd.windowAvg);
 
     maxSongScore = max(songDet);
@@ -68,8 +76,17 @@ for(nExper = find(dgd.bTrigOnSong))
     end
     daq_log('Song score computed');
     bNewFile(nExper) = false;
-    if(~recinfo(nExper).bSongTrigRecording & ~recinfo(nExper).bForcedRecording)%(~daq_isRecording(dgd.expers{dgd.ce}.audioCh))
-        %Since not currently recording this bird, check for song start.
+    % Update refractory period if necessary.
+    if (params(nExper).songDetectRefractoryPeriodActive)
+        % We have been in a refractory period. Should we still be?
+        if (sampNum - params(nExper).stopSamp > sd.songDetectRefractoryPeriod*dgd.actInSampRate)
+            % Refractory period completed.
+            params(nExper).songDetectRefractoryPeriodActive = false;
+            disp('Refractory period ended!')
+        end
+    end
+    if(~recinfo(nExper).bSongTrigRecording & ~recinfo(nExper).bForcedRecording & ~params(nExper).songDetectRefractoryPeriodActive)%(~daq_isRecording(dgd.expers{dgd.ce}.audioCh))
+        %Since not currently recording this bird and not in a refractory period, check for song start.
         if( (maxSongScore > sd.durationThreshold) )
             %If sufficient power to signify song, then begin recording
             daq_log('Attempt start song triggered recording.');
@@ -95,10 +112,17 @@ for(nExper = find(dgd.bTrigOnSong))
     elseif(recinfo(nExper).bSongTrigRecording)
         %Since already recording this bird, check for silence and file
         %getting too long.
-        if( (maxSongScore > sd.durationThreshold) & (sampNum - params(nExper).songStartSampNum < round(srp.maxFileLength*fs)))
-            params(nExper).stopSamp = sampNum + length(time) - 1;
+        if (sampNum - params(nExper).songStartSampNum < round(srp.maxFileLength*fs))
+            if (maxSongScore > sd.durationThreshold)
+                % Song still detected, and we haven't exceeded maxFileLength, so don't stop recording, push back stopSamp so recording will continue.
+                params(nExper).stopSamp = sampNum + length(time) - 1;
+            end
+        else
+            params(nExper).songDetectRefractoryPeriodActive = true;
+            disp('Refractory period started!')
         end
-        if( sampNum + length(audio) - 1 - params(nExper).stopSamp > round(srp.postSecs*fs) )
+        if( (sampNum + length(audio) - 1 - params(nExper).stopSamp > round(srp.postSecs*fs)) || params(nExper).songDetectRefractoryPeriodActive)
+            % There has been not-song for a period of more than postSecs seconds, or a refractory period is active, so we should stop recording.
             daq_log('Attempt to stop song triggered recordings.');
             songEndSampNum = sampNum + length(audio) - 1;
             [bStatus, endSamp] = daq_recordStop_triggerOut(songEndSampNum, dgd.experData(nExper).inChans);
@@ -167,4 +191,7 @@ if(bNewFile(dgd.ce) & dgd.experData(dgd.ce).autoUpdate)
     daq_log('Updating Display.');
     acqgui_updateDisplayFile(guifig, recinfo(nExper).filenum);
     daq_log('Completed waiting and display.');
+end
+catch me
+    disp(me.getReport('extended', 'hyperlinks', 'on'));
 end
