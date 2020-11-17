@@ -135,6 +135,7 @@ if length(dioChannels > 0)
     GDIOCHANS = dioChannels;
     try
         dio = digitalio('nidaq', deviceID);
+        disp(sprintf('Created dio object for device %s', deviceID)
     catch
         dio = digitalio('nidaq', 1);
     end
