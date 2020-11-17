@@ -135,8 +135,9 @@ if length(dioChannels > 0)
     GDIOCHANS = dioChannels;
     try
         dio = digitalio('nidaq', deviceID);
-        disp(sprintf('Created dio object for device %s', deviceID)
+        disp(sprintf('Created dio object for device %s', deviceID))
     catch
+        disp('Warning, could not access requested deviceID, attempting to use device with index 1')
         dio = digitalio('nidaq', 1);
     end
     GDIO = dio;
@@ -181,6 +182,7 @@ if(length(aoChannels) > 0)
         ochan(ndx).DefaultChannelValue = 0; %The voltage value at which the output channel sits by default.
     end
 end
+
 if(length(dioChannels) > 0)
     % Add desired digital lines:
     addline(dio, dioChannels, repmat({'out'}, size(dioChannels)));
