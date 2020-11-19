@@ -8,7 +8,7 @@ end
 
 
 
-debug = true;
+debug = false;
 if debug
     r = num2str(randi([0, 100000], 1, 1));
     birdname = ['test_bird_', r];
@@ -33,7 +33,7 @@ if debug
         exper.sigDesc{nName} = ['it is signal number ', num2str(nName)];
     end
 else
-    
+
 
 fprintf('\n')
 disp('Create new experiment:')
