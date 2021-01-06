@@ -323,10 +323,11 @@ end
 if(~recinfo(dgd.ce).bSongTrigRecording)
     bNewFile = false;
     if(~recinfo(dgd.ce).bForcedRecording)
+        % Attempting to manually-start recording
         recSampNum = daq_getCurrSampNum;
         [filenamePrefix, recfilenum] = getNewDatafilePrefix(dgd.expers{dgd.ce});
         recinfo(dgd.ce).recfilenum = recfilenum;
-        [bStatus, startSamp, filenames] = daq_recordStart(recSampNum, [dgd.expers{dgd.ce}.dir, filenamePrefix], dgd.experData(dgd.ce).inChans);
+        [bStatus, startSamp, filenames] = daq_recordStart_triggerOut(recSampNum, [dgd.expers{dgd.ce}.dir, filenamePrefix], dgd.experData(dgd.ce).inChans);
         if(~bStatus)
             error('Forced Start recording failed' );
         else
@@ -336,8 +337,9 @@ if(~recinfo(dgd.ce).bSongTrigRecording)
             recinfo(dgd.ce).bForcedRecording = true;
         end
     else
+        % Attempting to stop manual recording
         recSampNum = daq_getCurrSampNum;
-        [bStatus, endSamp] = daq_recordStop(recSampNum, dgd.experData(dgd.ce).inChans);
+        [bStatus, endSamp] = daq_recordStop_triggerOut(recSampNum, dgd.experData(dgd.ce).inChans);
         if(~bStatus)
             error('Song stop recording failed.');
         else
